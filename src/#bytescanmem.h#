@@ -56,7 +56,7 @@ typedef struct {
 
 //a dictionary is a collection of items, implemented as a tree
 typedef struct {
-  item_t ** items;
+  item_t ** root;
 } dictionary_t;
 
 
