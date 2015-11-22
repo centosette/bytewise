@@ -2,6 +2,9 @@
 bytescanmem.h
 Manage data structures for bytescan stats
  ******************************/
+/*****************************************************************
+data structures
+ *****************************************************************/
 
 /*****************************
 ----- ELEMENTS -----
@@ -57,11 +60,21 @@ typedef struct {
 //a dictionary is a collection of items, implemented as a binary tree
 typedef struct {
   item_t * item;
+  treenode_t * father;
   treenode_t * left;
   treenode_t * right;
   long lefters;
   long righters;
 } treenode_t;
+
+/*********************************************************
+functions
+ *********************************************************/
+
+/*****************************
+general purpose functions
+ *****************************/
+void * xmalloc (size_t size);
 
 
 /*****************************
@@ -69,7 +82,8 @@ key managing functions
  *****************************/
 
 key_t * create_key (char ** buf, int len);
-int compare_keys (key_t * key1, key_t * key2); // returns 0 if equal; -1 if key1 is lesser than key2; 1 if key1 is greater than key 2.
+// returns 0 if equal; -1 if key1 is lesser than key2; 1 if key1 is greater than key 2.
+int compare_keys (key_t * key1, key_t * key2); 
 
 
 /********************************
@@ -84,6 +98,16 @@ int upcount (key_t * key);
 /********************************
 dictionary tree managing functions
 ***********************************/
+
+int create_tree (treenode_t * root_node);
+int link_right (treenode_t * father, treenode_t * right);
+int link_left (treenode_t * father, treenode_t * left);
+int get_father (treenode_t * father, treenode_t * child);
+int get_left (treenode_t * left, treenode_t * father);
+int get_right (treenode_t * right, treenode_t * father);
+int get_biggest (treenode_t * biggest, treenode_t * root);
+int get_smallest (treenode_t * smallest, treenode_t * root);
+
 /*****************
 rotate: in this binary tree, when a subtree gets too big with respect to the other
 , the tree needs to be rebalanced.
@@ -101,6 +125,11 @@ If the Left subtree becomes too big, the algorithm does the following:
 11) L --> left (Root') = L'
 12) lN* --> right (pN*)
  *****************/
-int rotate (dictionary_t * dictionary);
+int rotate_left_right (treenode_t * root_node);
+int rotate_right_left (treenode_t * root_node);
+
+//check_balance: check tree balancing, then you'll decide wether to balance it or not
+int check_balance (treenode_t * root_node); 
+
 
 
