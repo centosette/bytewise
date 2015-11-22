@@ -46,7 +46,7 @@ typedef struct {
 } occurrence_position_t;
 
 
-//an item collects key, occurrence count and the head of the occurrence positions list
+//an item collects a key, occurrence count and the head of the occurrence positions list
 typedef struct {
   key_t * key;
   occurrence_count_t * count;
@@ -54,10 +54,14 @@ typedef struct {
 } item_t;
 
 
-//a dictionary is a collection of items, implemented as a tree
+//a dictionary is a collection of items, implemented as a binary tree
 typedef struct {
-  item_t ** items;
-} dictionary_t;
+  item_t * item;
+  treenode_t * left;
+  treenode_t * right;
+  long lefters;
+  long righters;
+} treenode_t;
 
 
 /*****************************
@@ -68,7 +72,35 @@ key_t * create_key (char ** buf, int len);
 int compare_keys (key_t * key1, key_t * key2); // returns 0 if equal; -1 if key1 is lesser than key2; 1 if key1 is greater than key 2.
 
 
-
-
-int additem (dictionary_t * dictionary, key_t * key);
+/********************************
+item managing functions
+***********************************/
+int additem (treenode_t * dictionary, key_t * key);
 int upcount (key_t * key);
+
+
+
+
+/********************************
+dictionary tree managing functions
+***********************************/
+/*****************
+rotate: in this binary tree, when a subtree gets too big with respect to the other
+, the tree needs to be rebalanced.
+If the Left subtree becomes too big, the algorithm does the following:
+1) determine N* = max (Left); the bigger node belonging to Left. This node has no "righters", by definition.
+2) determine L = root(Left); the root of the left subtree
+3) determine Root = the present root of the tree
+4) determine R = root(Right); the root of the right subtree
+5) determine pN* = parent(N*);
+6) determine lN* = left(N*); the left child of N*, if it exists
+7) Root --> R';
+8) R --> right(R'); lefters(R') := 0; righters(R') := lefters(R) + righters(R);
+9) N* --> Root'; righters(Root') := righters(R') + 1; lefters(Root') := lefters(L) + righters(L) - 1;
+10) R' --> right(Root')
+11) L --> left (Root') = L'
+12) lN* --> right (pN*)
+ *****************/
+int rotate (dictionary_t * dictionary);
+
+
