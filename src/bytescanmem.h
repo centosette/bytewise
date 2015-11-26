@@ -102,6 +102,11 @@ dictionary tree managing functions
 int create_tree (treenode_t * root_node);
 int link_right (treenode_t * father, treenode_t * right);
 int link_left (treenode_t * father, treenode_t * left);
+int detach_right (treenode_t * father, treenode_t * right);
+int detach_left (treenode_t * father, treenode_t * left);
+int free_tree (treenode_t * root);
+int prune_right (treenode_t * father);
+int prune_left (treenode_t * father);
 int get_father (treenode_t * father, treenode_t * child);
 int get_left (treenode_t * left, treenode_t * father);
 int get_right (treenode_t * right, treenode_t * father);
