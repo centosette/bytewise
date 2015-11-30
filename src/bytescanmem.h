@@ -2,6 +2,12 @@
 bytescanmem.h
 Manage data structures for bytescan stats
  ******************************/
+//includes
+
+#include <stdlib.h>
+
+
+
 /*****************************************************************
 data structures
  *****************************************************************/
@@ -35,34 +41,34 @@ key.
 //customized
 typedef struct {
   char ** keychars;
-} key_t;
+} bkey_t;
 
 //occurrence counter, as a pointer to unsigned long
-typedef struct {
+typedef struct _oct_{
   unsigned long * occurrences;
 } occurrence_count_t;
 
 //positions, as a linked list
-typedef struct {
+typedef struct _ocp_{
   unsigned long * position;
-  occurrence_position_t * next;
+  struct _ocp_ * next;
 } occurrence_position_t;
 
 
 //an item collects a key, occurrence count and the head of the occurrence positions list
 typedef struct {
-  key_t * key;
+  bkey_t * key;
   occurrence_count_t * count;
   occurrence_position_t * occurs;
 } item_t;
 
 
 //a dictionary is a collection of items, implemented as a binary tree
-typedef struct {
+typedef struct _node_{
   item_t * item;
-  treenode_t * father;
-  treenode_t * left;
-  treenode_t * right;
+  struct _node_ * father;
+  struct _node_ * left;
+  struct _node_ * right;
   long lefters;
   long righters;
 } treenode_t;
@@ -83,14 +89,14 @@ key managing functions
 
 key_t * create_key (char ** buf, int len);
 // returns 0 if equal; -1 if key1 is lesser than key2; 1 if key1 is greater than key 2.
-int compare_keys (key_t * key1, key_t * key2); 
+int compare_keys (bkey_t * key1, bkey_t * key2); 
 
 
 /********************************
 item managing functions
 ***********************************/
-int additem (treenode_t * dictionary, key_t * key);
-int upcount (key_t * key);
+int additem (treenode_t * dictionary, bkey_t * key);
+int upcount (bkey_t * key);
 
 
 
