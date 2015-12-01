@@ -1,3 +1,5 @@
+
+
 /*******************************
 bytescanmem.h
 Manage data structures for bytescan stats
@@ -5,9 +7,18 @@ Manage data structures for bytescan stats
 //includes
 
 #include <stdlib.h>
+#define _GNU_SOURCE
+#include <string.h>
+//defs
 
-
-
+#define XML_BUFLEN 512
+#define XML_DOCUMENT_TAG "\n"
+#define XML_TREE_OPEN "<tree>\n"
+#define XML_TREE_CLOSE "</tree>\n"
+#define XML_NODE_OPEN "<node>"
+#define XML_NODE_CLOSE "</node>\n"
+#define XML_INFO_OPEN "<info>\n"
+#define XML_INFO_CLOSE "</info>\n"
 /*****************************************************************
 data structures
  *****************************************************************/
@@ -40,17 +51,19 @@ key.
 //to hold a key value. simply a pointer to an array of chars, so that key length may be
 //customized
 typedef struct {
-  char ** keychars;
+  char * keychars;
+  int length;
 } bkey_t;
 
 //occurrence counter, as a pointer to unsigned long
-typedef struct _oct_{
-  unsigned long * occurrences;
-} occurrence_count_t;
+typedef unsigned long occurrence_count_t;
+
+//single position
+typedef unsigned long position_t;
 
 //positions, as a linked list
 typedef struct _ocp_{
-  unsigned long * position;
+  position_t position;
   struct _ocp_ * next;
 } occurrence_position_t;
 
@@ -58,7 +71,7 @@ typedef struct _ocp_{
 //an item collects a key, occurrence count and the head of the occurrence positions list
 typedef struct {
   bkey_t * key;
-  occurrence_count_t * count;
+  occurrence_count_t count;
   occurrence_position_t * occurs;
 } item_t;
 
@@ -72,6 +85,18 @@ typedef struct _node_{
   long lefters;
   long righters;
 } treenode_t;
+
+
+/********************************************************
+enums
+ ********************************************************/
+typedef enum {
+  LINK_SAFE_MODE,  //return error if el->next is not null
+  LINK_UNSAFE_MODE, //ignore value of el->next: will be overwritten
+  LINK_UNSAFE_FREE_MODE, //free(el->next) before overwrite
+  LINK_SEARCH_TAIL //find the tail element (el: el->next == 0), then attach
+} link_policy_t;
+
 
 /*********************************************************
 functions
@@ -87,7 +112,25 @@ void * xmalloc (size_t size);
 key managing functions
  *****************************/
 
-key_t * create_key (char ** buf, int len);
+/********************************
+add_key:
+1) lookup dictionary for key
+2.A) if not found (key)
+        a) create new item (key, position, count = 0)
+        b) create new node (item)
+        c) return -1
+2.B) else
+        a) upcount node->item
+        b) add position to occurrence_list
+        c) set item = node->item
+        c) return 0
+ ********************************/
+//add_key: Try and add or update  key in dictionary tree. 
+item_t * add_key(treenode_t * dictionary, bkey_t * key, position_t position);
+//find_key: lookup dictionary for key. if matched, set item pointer, return 0.
+//else, set item = null, return -1 
+item_t * find_key (treenode_t * dictionary, bkey_t * key);
+bkey_t * create_key (char * buf, int len);
 // returns 0 if equal; -1 if key1 is lesser than key2; 1 if key1 is greater than key 2.
 int compare_keys (bkey_t * key1, bkey_t * key2); 
 
@@ -95,8 +138,15 @@ int compare_keys (bkey_t * key1, bkey_t * key2);
 /********************************
 item managing functions
 ***********************************/
+item_t * create_item (bkey_t * key);
+int set_count (item_t * item, occurrence_count_t count);
+int add_occurrence (item_t * item, position_t pos);
+int link_occurrence (occurrence_position_t * new
+		     , occurrence_position_t * tail
+		     , position_t pos
+		     , link_policy_t policy);
 int additem (treenode_t * dictionary, bkey_t * key);
-int upcount (bkey_t * key);
+occurrence_count_t upcount (item_t * item);
 
 
 
@@ -105,7 +155,7 @@ int upcount (bkey_t * key);
 dictionary tree managing functions
 ***********************************/
 
-int create_tree (treenode_t * root_node);
+treenode_t * create_tree ();
 int link_right (treenode_t * father, treenode_t * right);
 int link_left (treenode_t * father, treenode_t * left);
 int detach_right (treenode_t * father, treenode_t * right);
@@ -113,11 +163,9 @@ int detach_left (treenode_t * father, treenode_t * left);
 int free_tree (treenode_t * root);
 int prune_right (treenode_t * father);
 int prune_left (treenode_t * father);
-int get_father (treenode_t * father, treenode_t * child);
-int get_left (treenode_t * left, treenode_t * father);
-int get_right (treenode_t * right, treenode_t * father);
-int get_biggest (treenode_t * biggest, treenode_t * root);
-int get_smallest (treenode_t * smallest, treenode_t * root);
+treenode_t * get_biggest (treenode_t * root);
+treenode_t * get_smallest (treenode_t * root);
+int get_xml (treenode_t * root);
 
 /*****************
 rotate: in this binary tree, when a subtree gets too big with respect to the other
@@ -140,7 +188,7 @@ int rotate_left_right (treenode_t * root_node);
 int rotate_right_left (treenode_t * root_node);
 
 //check_balance: check tree balancing, then you'll decide wether to balance it or not
-int check_balance (treenode_t * root_node); 
+int check_balance (treenode_t * root_node, int threshold); 
 
 
 
